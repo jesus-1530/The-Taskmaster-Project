@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" serverName="https://github.com/jesus-1530/The-Taskmaster-Project.git" remoteFilesAllowedToDisappearOnAutoupload="false" />
+  <component name="PublishConfigData" serverName="https://github.com/jesus-1530/The-Taskmaster-Project.git" uploadOnCheckinGroup="https://github.com/jesus-1530/The-Taskmaster-Project.git" remoteFilesAllowedToDisappearOnAutoupload="false" />
 </project>
