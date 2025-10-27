@@ -17,7 +17,7 @@ public class App extends Application {
     public void start(Stage stage) {
         stage.setTitle("Log in");
 
-        //project name
+        //name
         Label nameTitle = new Label("Task Master");
         nameTitle.setStyle("-fx-font-size: 36px; -fx-font-weight: bold;");
 
