@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TaskMaster</title>
+
+    <!-- FullCalendar CSS & JS -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #ffffff;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 200px 1fr 350px;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background-color: #ffffff;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-right: 3px solid #b3b3b3;
+        }
+
+        .sidebar button {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 2px solid gray;
+            border-radius: 6px;
+            background-color: #e6e6e6;
+            cursor: pointer;
+        }
+
+        /* Calendar */
+        #calendar {
+            margin: 20px;
+            background-color: white;
+            border: 3px solid gray;
+            padding: 10px;
+            height: 80vh;
+        }
+
+        /* To-Do List Section */
+        .todo-section {
+            background-color: #ffffff;
+            padding: 20px;
+            border-left: 3px solid #b3b3b3;
+            overflow-y: auto;
+        }
+
+        .todo-section h2 {
+            text-align: center;
+        }
+
+        .task-item {
+            margin-bottom: 10px;
+            padding: 8px;
+            background: #f8f8f8;
+            border-left: 4px solid #6a5acd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .task-meta {
+            flex: 1;
+            padding-right: 8px;
+        }
+
+        .delete-btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        form button {
+            margin-top: 6px;
+            padding: 8px 12px;
+            background-color: #6a5acd;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <a href="/"><button>Calendar</button></a>
+            <a href="store#home"><button>Store</button></a>
+            <a href="store#orders"><button>My Stuff</button></a>
+            <a href="store#login"><button>Login</button></a>
+            <a href="store#signup"><button>Sign Up</button></a>
+            
+        </div>
+
+        <!-- Calendar -->
+        <div id="calendar"></div>
+
+        <!-- To-Do List -->
+        <div class="todo-section">
+            <h2>To-Do List</h2>
+
+            <form method="POST">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit">Add Task</button>
+            </form>
+
+            <hr>
+
+            {% for task in tasks %}
+                <div class="task-item" id="task-{{ task.id }}">
+                    <div class="task-meta">
+                        <strong>{{ task.title }}</strong><br>
+                        {% if task.due_date %}
+                            Due: {{ task.due_date }}
+                        {% endif %}
+                    </div>
+                    <button class="delete-btn" data-task-id="{{ task.id }}">Delete</button>
+                </div>
+            {% empty %}
+                <p>No tasks yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- FullCalendar Script -->
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            cookie = cookie.trim();
+            if (cookie.startsWith(name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+document.addEventListener('DOMContentLoaded', function () {
+    let calendarEl = document.getElementById('calendar');
+    const csrftoken = getCookie('csrftoken');
+
+    let calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        events: '/tasks-json/',
+        dateClick: function(info) {
+            let date = info.dateStr;
+            let title = prompt("Task Title:");
+
+            if (title) {
+                fetch('/add-task/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken
+                    },
+                    body: JSON.stringify({
+                        'title': title,
+                        'due_date': date
+                    })
+                })
+                .then(response => {
+                    if (response.ok) {
+                        calendar.refetchEvents(); // refresh calendar
+                        window.location.reload(); // refresh To-Do list
+                    }
+                });
+            }
+        }
+    });
+
+    calendar.render();
+
+    // Delete handlers
+    // Use event delegation so newly-added tasks are handled too
+    document.querySelector('.todo-section').addEventListener('click', async function(e) {
+        const btn = e.target.closest('.delete-btn');
+        if (!btn) return;
+        e.preventDefault();
+
+        const taskId = btn.getAttribute('data-task-id');
+        if (!taskId) return;
+        if (!confirm('Delete this task?')) return;
+
+        try {
+            const resp = await fetch('/delete-task/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({ id: taskId })
+            });
+
+            if (!resp.ok) {
+                console.error('Failed to delete task', resp.status);
+                alert('Could not delete task.');
+                return;
+            }
+
+            // remove the task DOM node with a short fade
+            const el = document.getElementById('task-' + taskId);
+            if (el) {
+                el.style.transition = 'opacity 200ms';
+                el.style.opacity = '0';
+                setTimeout(() => el.remove(), 200);
+            }
+
+            // refresh calendar events
+            calendar.refetchEvents();
+        } catch (err) {
+            console.error('Delete error', err);
+            alert('Error deleting task.');
+        }
+    });
+});
+</script>
+
+
+</body>
+</html>

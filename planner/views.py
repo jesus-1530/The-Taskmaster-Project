@@ -43,3 +43,16 @@ def add_task(request):
         return JsonResponse({'success': True})
     
     return JsonResponse({'success': False})
+
+def delete_task(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        task_id = data.get('id')
+        try:
+            task = Task.objects.get(id=task_id)
+            task.delete()
+            return JsonResponse({'success': True})
+        except Task.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Task not found'})
+
+    return JsonResponse({'success': False, 'error': 'Invalid request'})

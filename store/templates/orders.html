@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Your Orders</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <style>
+        body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; margin: 24px; color:#222; }
+        h1 { margin-bottom: 12px; }
+        .card { border: 1px solid #e3e3e3; border-radius: 8px; padding: 16px; background:#fff; }
+        table { width:100%; border-collapse: collapse; margin-top: 12px; }
+        th, td { text-align:left; padding: 10px 8px; border-bottom: 1px solid #f0f0f0; font-size:14px; }
+        th { color:#444; font-weight:600; background: #fafafa; }
+        .muted { color:#666; font-size:13px; }
+        .empty { padding: 40px; text-align:center; color:#666; }
+        .actions a { color:#0b66ff; text-decoration:none; }
+        @media (max-width:640px){
+            table, thead, tbody, th, td, tr { display:block; }
+            thead { display:none; }
+            tr { margin-bottom:12px; border:1px solid #f2f2f2; border-radius:6px; padding:8px; }
+            td { border:0; padding:6px 8px; }
+            td::before { font-weight:600; display:inline-block; width:100px; color:#444; }
+            td[data-label="date"]::before{ content:"Date"; }
+            td[data-label="items"]::before{ content:"Items"; }
+            td[data-label="total"]::before{ content:"Total"; }
+        }
+    </style>
+</head>
+<body>
+    <h1>Your Stuff</h1>
+    <div class="card">
+        {% if orders %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Stuff</th>
+                        <th>Date</th>
+                        <th>Items</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                        <tr>
+                            <td data-label="Stuff">#{{ order.pk }}</td>
+
+                            <td data-label="date" class="muted">
+                                {% if order.created_at %}{{ order.created_at|date:"Y-m-d H:i" }}
+                                {% elif order.created_date %}{{ order.created_date|date:"Y-m-d H:i" }}
+                                {% elif order.date %}{{ order.date|date:"Y-m-d H:i" }}
+                                {% else %}-{% endif %}
+                            </td>
+
+                            <td data-label="items">
+                                {% if order.items %}
+                                    {% if order.items.all %}
+                                        <ul style="margin:0;padding-left:18px;">
+                                            {% for it in order.items.all %}
+                                                <li>{{ it.product.name|default:it.product|default:it }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% else %}
+                                        <ul style="margin:0;padding-left:18px;">
+                                            {% for it in order.items %}
+                                                <li>{{ it }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                {% elif order.order_items %}
+                                    <ul style="margin:0;padding-left:18px;">
+                                        {% for it in order.order_items.all %}
+                                            <li>{{ it.product.name|default:it.product|default:it }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    <span class="muted">—</span>
+                                {% endif %}
+                            </td>
+
+                            <td data-label="total">
+                                {% if order.total %}{{ order.total }}
+                                {% elif order.total_price %}{{ order.total_price }}
+                                {% elif order.amount %}{{ order.amount }}
+                                {% else %}-{% endif %}
+                            </td>
+
+                            <td data-label="status">
+                                {% if order.status %}{{ order.status }}
+                                {% elif order.state %}{{ order.state }}
+                                {% else %}<span class="muted">Unknown</span>{% endif %}
+                            </td>
+
+                            <td data-label="actions" class="actions">
+                                <a href="{% url 'stuff_detail' order.pk %}" title="View Stuff">Details</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="empty">
+                <p><strong>Nothing yet.</strong></p>
+                <p class="muted">You haven't gotten anything yet.</p>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>
