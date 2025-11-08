@@ -77,8 +77,8 @@
             padding-right: 8px;
         }
 
-        .delete-btn {
-            background: #ff6b6b;
+        .complete-btn {
+            background: #23d300;
             color: white;
             border: none;
             padding: 6px 10px;
@@ -104,9 +104,12 @@
 
         <!-- Sidebar -->
         <div class="sidebar">
+            <a class="navbar-brand" href="#">Task Master</a>
+
             <a href="/"><button>Calendar</button></a>
-            <a href="store#home"><button>Store</button></a>
-            <a href="store#orders"><button>My Stuff</button></a>
+            <a href="store#home"><button>My Goals</button></a>
+            <a href="store#orders"><button>My Milestones</button></a>
+            <a href="store#profile"><button>My Profile</button></a>
             <a href="store#login"><button>Login</button></a>
             <a href="store#signup"><button>Sign Up</button></a>
             
@@ -135,7 +138,7 @@
                             Due: {{ task.due_date }}
                         {% endif %}
                     </div>
-                    <button class="delete-btn" data-task-id="{{ task.id }}">Delete</button>
+                    <button class="complete-btn" data-task-id="{{ task.id }}">Complete</button>
                 </div>
             {% empty %}
                 <p>No tasks yet.</p>
@@ -195,46 +198,36 @@ document.addEventListener('DOMContentLoaded', function () {
     calendar.render();
 
     // Delete handlers
-    // Use event delegation so newly-added tasks are handled too
-    document.querySelector('.todo-section').addEventListener('click', async function(e) {
-        const btn = e.target.closest('.delete-btn');
-        if (!btn) return;
-        e.preventDefault();
-
+    function handleDeleteClick(e) {
+        const btn = e.currentTarget;
         const taskId = btn.getAttribute('data-task-id');
         if (!taskId) return;
-        if (!confirm('Delete this task?')) return;
+        if (!confirm('Complete this task?')) return;
 
-        try {
-            const resp = await fetch('/delete-task/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken
-                },
-                body: JSON.stringify({ id: taskId })
-            });
-
-            if (!resp.ok) {
-                console.error('Failed to delete task', resp.status);
-                alert('Could not delete task.');
-                return;
+        fetch('/delete-task/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({ id: taskId })
+        })
+        .then(resp => {
+            if (resp.ok) {
+                // remove the task DOM node
+                const el = document.getElementById('task-' + taskId);
+                if (el) el.remove();
+                // refresh calendar events
+                calendar.refetchEvents();
+            } else {
+                console.error('Failed to remove task', resp.status);
             }
+        })
+        .catch(err => console.error('Delete error', err));
+    }
 
-            // remove the task DOM node with a short fade
-            const el = document.getElementById('task-' + taskId);
-            if (el) {
-                el.style.transition = 'opacity 200ms';
-                el.style.opacity = '0';
-                setTimeout(() => el.remove(), 200);
-            }
-
-            // refresh calendar events
-            calendar.refetchEvents();
-        } catch (err) {
-            console.error('Delete error', err);
-            alert('Error deleting task.');
-        }
+    document.querySelectorAll('.complete-btn').forEach(btn => {
+        btn.addEventListener('click', handleDeleteClick);
     });
 });
 </script>

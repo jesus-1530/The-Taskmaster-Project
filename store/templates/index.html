@@ -9,6 +9,23 @@
         .view { display: none; }
         .view.active { display: block; }
         nav .nav-link { cursor: pointer; }
+        .navbar-nav { 
+            flex-direction: column !important; 
+            width: 200px;
+        }
+        .navbar-collapse {
+            flex-basis: auto;
+        }
+        .user-points {
+            font-weight: bold;
+            color: #007bff;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        .navbar {
+            align-items: flex-start;
+        }
     </style>
 </head>
 <body>
@@ -21,14 +38,18 @@
 
             <div class="collapse navbar-collapse" id="navMenu">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" data-target="home" href="/">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" data-target="home" href="/">Calendar</a></li>
+                    <li class="nav-item"><a class="nav-link" data-target="home" href="#">My Goals</a></li>
+                    <li class="nav-item"><a class="nav-link" data-target="orders" href="#">My Milestones</a></li>
+                    <li class="nav-item"><a class="nav-link" data-target="profile" href="#">My Profile</a></li>
                     <li class="nav-item"><a class="nav-link" data-target="login" href="#">Login</a></li>
                     <li class="nav-item"><a class="nav-link" data-target="signup" href="#">Sign Up</a></li>
-                    <li class="nav-item"><a class="nav-link" data-target="orders" href="#">My Stuff</a></li>
                 </ul>
             </div>
         </div>
     </nav>
+
+    <div class="user-points">Points: {{ customer.points }}</div>
 
     <main class="container">
         <section id="home" class="view active">

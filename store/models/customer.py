@@ -1,12 +1,11 @@
 from django.db import models
-
+from django.contrib.auth.models import User
 
 class Customer(models.Model):
-    first_name = models.CharField(max_length=50)
-    last_name = models.CharField(max_length=50)
-    phone = models.CharField(max_length=10)
+    username = models.CharField(max_length=50)
     email = models.EmailField()
     password = models.CharField(max_length=100)
+    points = models.IntegerField(default=50)
 
     # to save the data
     def register(self):
