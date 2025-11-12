@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #ffffff;
+        }
+    </style>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskMaster Store</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <main class="container">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="text-center mb-4">My Goals</h1>
+            </div>
+        </div>
+        <div class="row mb-4">
+            <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                <h3>Add New Goal</h3>
+                </div>
+                <div class="card-body">
+                <form id="goalForm">
+                    <div class="mb-3">
+                    <label for="goalName" class="form-label">Goal Name</label>
+                    <input type="text" class="form-control" id="goalName" required>
+                    </div>
+                    <div class="mb-3">
+                    <label for="goalDescription" class="form-label">Description</label>
+                    <textarea class="form-control" id="goalDescription" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                    <label for="goalPoints" class="form-label">Points Cost</label>
+                    <input type="number" class="form-control" id="goalPoints" min="1" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Goal</button>
+                </form>
+                </div>
+            </div>
+            </div>
+        </div>
+        
+        <div class="row mb-3">
+            <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3>Available Goals</h3>
+                <div class="badge bg-success fs-6">Points: <span id="userPoints">100</span></div>
+            </div>
+            </div>
+        </div>
+        
+        <div class="row" id="goalsList">
+            <!-- Goal cards will be dynamically added here -->
+        </div>
+
+        <script>
+            let userPoints = parseInt(localStorage.getItem('userPoints')) || 100;
+            let goals = JSON.parse(localStorage.getItem('goals')) || [];
+            let completedGoals = JSON.parse(localStorage.getItem('completedGoals')) || [];
+
+            document.getElementById('userPoints').textContent = userPoints;
+
+            document.getElementById('goalForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('goalName').value;
+            const description = document.getElementById('goalDescription').value;
+            const points = parseInt(document.getElementById('goalPoints').value);
+            
+            const goal = {
+                id: Date.now(),
+                name: name,
+                description: description,
+                points: points,
+                dateAdded: new Date().toISOString()
+            };
+            
+            goals.push(goal);
+            localStorage.setItem('goals', JSON.stringify(goals));
+            
+            this.reset();
+            renderGoals();
+            });
+
+            function renderGoals() {
+            const goalsList = document.getElementById('goalsList');
+            goalsList.innerHTML = '';
+            
+            goals.forEach(goal => {
+                const canAfford = userPoints >= goal.points;
+                const goalCard = `
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">${goal.name}</h5>
+                        <p class="card-text">${goal.description}</p>
+                        <p class="card-text"><strong>Cost: ${goal.points} points</strong></p>
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn ${canAfford ? 'btn-success' : 'btn-secondary'}" 
+                            onclick="completeGoal(${goal.id})" 
+                            ${canAfford ? '' : 'disabled'}>
+                        ${canAfford ? 'Complete Goal' : 'Not Enough Points'}
+                        </button>
+                    </div>
+                    </div>
+                </div>
+                `;
+                goalsList.innerHTML += goalCard;
+            });
+            }
+
+            function completeGoal(goalId) {
+            const goalIndex = goals.findIndex(g => g.id === goalId);
+            if (goalIndex === -1) return;
+            
+            const goal = goals[goalIndex];
+            if (userPoints >= goal.points) {
+                userPoints -= goal.points;
+                goals.splice(goalIndex, 1);
+                
+                goal.completedDate = new Date().toISOString();
+                completedGoals.push(goal);
+                
+                localStorage.setItem('userPoints', userPoints);
+                localStorage.setItem('goals', JSON.stringify(goals));
+                localStorage.setItem('completedGoals', JSON.stringify(completedGoals));
+                
+                document.getElementById('userPoints').textContent = userPoints;
+                renderGoals();
+            }
+            }
+
+            // Initial render
+            renderGoals();
+        </script>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

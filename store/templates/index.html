@@ -9,6 +9,18 @@
         .view { display: none; }
         .view.active { display: block; }
         nav .nav-link { cursor: pointer; }
+        .user-points {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            color: #007bff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
         .navbar-nav { 
             flex-direction: column !important; 
             width: 200px;
@@ -18,7 +30,7 @@
         }
         .user-points {
             font-weight: bold;
-            color: #007bff;
+            color: #000000;
             position: absolute;
             top: 10px;
             right: 10px;
@@ -38,8 +50,8 @@
 
             <div class="collapse navbar-collapse" id="navMenu">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" data-target="home" href="/">Calendar</a></li>
-                    <li class="nav-item"><a class="nav-link" data-target="home" href="#">My Goals</a></li>
+                    <li class="nav-item"><a class="nav-link" data-target="calendar" href="/">Calendar</a></li>
+                    <li class="nav-item"><a class="nav-link" data-target="goals" href="#">My Goals</a></li>
                     <li class="nav-item"><a class="nav-link" data-target="orders" href="#">My Milestones</a></li>
                     <li class="nav-item"><a class="nav-link" data-target="profile" href="#">My Profile</a></li>
                     <li class="nav-item"><a class="nav-link" data-target="login" href="#">Login</a></li>
@@ -49,11 +61,15 @@
         </div>
     </nav>
 
-    <div class="user-points">Points: {{ customer.points }}</div>
+    <div class="user-points">Points: {{ points.points }}</div>
 
     <main class="container">
-        <section id="home" class="view active">
-            {% include 'home.html' %}
+        <section id="goals" class="view active">
+            {% include 'goals.html' %}
+        </section>
+
+        <section id="calendar" class="view active">
+            {% include 'calendar.html' %}
         </section>
 
         <section id="login" class="view">

@@ -8,13 +8,10 @@ from .middlewares.auth import auth_middleware
 
 
 urlpatterns = [
-    #path('store', store, name='store'),
-    #path('signup', Signup.as_view, name='signup'),
-    #path('login', Login.as_view, name='login'),
-    #path('my stuff', OrderView.as_view, name='my stuff'),
-    path('store', store, name='store'),
-    path('signup', Signup.as_view(), name='signup'),
-    path('login', Login.as_view(), name='login'),
-    path('logout', logout, name='logout'),
-    path('my stuff', auth_middleware(OrderView.as_view()), name='my stuff'),
+    path('', store, name='goal'),
+    path('store/', store, name='store'),
+    path('signup/', Signup.as_view(), name='signup'),
+    path('login/', Login.as_view(), name='login'),
+    path('logout/', logout, name='logout'),
+    path('my-stuff/', auth_middleware(OrderView.as_view()), name='my-stuff'),
 ]
