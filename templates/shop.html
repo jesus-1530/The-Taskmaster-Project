@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Rewards Shop</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #d9d6f3; /* Match home background */
+      display: flex;
+      height: 100vh;
+    }
+
+    .sidebar {
+      width: 150px;
+      background-color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 20px;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    }
+
+    .sidebar button {
+      width: 100px;
+      margin: 10px 0;
+      padding: 10px;
+      border: 1px solid gray;
+      background-color: #e6e6e6;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 4px;
+    }
+
+    .sidebar button:hover { background-color: #ccc; }
+
+    .main {
+      flex: 1;
+      background-color: #d9d6f3; /* Match home */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    h1 {
+      color: #2b2bff;
+      font-size: 36px;
+      margin-bottom: 20px;
+    }
+
+    .points {
+      background: white;
+      padding: 10px 20px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      font-weight: bold;
+    }
+
+    .upload-form {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 25px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      width: 400px;
+      text-align: center;
+    }
+
+    .upload-form input, .upload-form textarea {
+      width: 90%;
+      margin: 5px 0;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    .upload-form button {
+      background-color: #0078d7;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 25px;
+      max-width: 800px;
+    }
+
+    .item-card {
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      text-align: center;
+      padding: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .item-card img {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 6px;
+    }
+
+    .item-card h3 { margin: 10px 0 5px; }
+    .item-card p { font-size: 14px; margin: 5px 0; }
+
+    .item-card button {
+      background-color: #0078d7;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .item-card button:hover { background-color: #005fa3; }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <a href="{% url 'home' %}"><button>Home</button></a>
+    <a href="{% url 'shop' %}"><button>Shop</button></a>
+  </div>
+
+  <div class="main">
+    <h1>Rewards Shop</h1>
+    <div class="points">💰 Points: {{ profile.points }}</div>
+
+    <!-- Upload Form -->
+    <div class="upload-form">
+      <h3>Upload Your Own Reward</h3>
+      <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="text" name="name" placeholder="Item name" required><br>
+        <input type="number" name="cost" placeholder="Cost (points)" required><br>
+        <textarea name="description" placeholder="Description"></textarea><br>
+        <input type="file" name="image" accept="image/*"><br>
+        <button type="submit" name="upload_item">Upload</button>
+      </form>
+    </div>
+
+    <!-- Items Grid -->
+    <div class="grid">
+      {% for item in items %}
+      <div class="item-card">
+        {% if item.image %}
+          <img src="{{ item.image.url }}" alt="{{ item.name }}">
+        {% else %}
+          <img src="https://via.placeholder.com/150" alt="No image">
+        {% endif %}
+        <h3>{{ item.name }}</h3>
+        <p>{{ item.description }}</p>
+        <p><strong>{{ item.cost }} pts</strong></p>
+
+        <form method="POST">
+          {% csrf_token %}
+          <input type="hidden" name="item_id" value="{{ item.id }}">
+          <button type="submit">Buy</button>
+        </form>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</body>
+</html>
