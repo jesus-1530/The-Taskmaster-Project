@@ -5,6 +5,8 @@ from django.utils import timezone
 from .models import Task, UserProfile
 from .canvas_api import fetch_canvas_assignments
 from django.contrib import messages
+from random import randint
+from datetime import datetime, time
 
 @login_required(login_url='login')
 def home(request):
@@ -13,18 +15,54 @@ def home(request):
 
     if request.method == 'POST':
         if 'add_task' in request.POST:
+            title = (request.POST.get('task') or '').strip()
+            desc = request.POST.get('task_desc')
+            due_raw = (request.POST.get('due_date') or '').strip()
+
+            if not title:
+                messages.error(request, "Task title cannot be empty.")
+                return redirect('home')
+            if not due_raw:
+                messages.error(request, "Due date is required.")
+                return redirect('home')
+            # Validate & parse date (HTML date input: YYYY-MM-DD)
+            try:
+                date_obj = datetime.strptime(due_raw, '%Y-%m-%d').date()
+            except ValueError:
+                messages.error(request, "Invalid due date format.")
+                return redirect('home')
+            # Set due time to 23:59 for consistency and make timezone aware
+            due_dt = datetime.combine(date_obj, time(23, 59))
+            due_dt = timezone.make_aware(due_dt, timezone.get_current_timezone())
+
+            # Optional duplicate title safeguard
+            if Task.objects.filter(user=request.user, task__iexact=title).exists():
+                messages.warning(request, "A task with that title already exists.")
+                return redirect('home')
+            
+            random_points = randint(5, 20)
             Task.objects.create(
                 user=request.user,
-                task=request.POST.get('task'),
-                task_desc=request.POST.get('task_desc'),
-                due_date=request.POST.get('due_date')
+                task=title,
+                task_desc=desc,
+                due_date=due_dt,
+                point_value=random_points
             )
+            messages.success(request, f"Task added with {random_points} points.")
             return redirect('home')
 
-        elif 'delete_task' in request.POST:
-            Task.objects.filter(id=request.POST.get('task_id'), user=request.user).delete()
+        elif 'complete_task' in request.POST:
+            task_id = request.POST.get('task_id')
+            task = Task.objects.filter(id=task_id, user=request.user).first()
+            if task and not task.completed:
+                task.completed = True
+                task.save(update_fields=['completed'])
+                profile.points += task.point_value
+                profile.save(update_fields=['points'])
+                messages.success(request, f"Completed '{task.task}'. +{task.point_value} points!")
+                Task.objects.filter(id=request.POST.get('task_id'), user=request.user).delete()
             return redirect('home')
-
+        
     return render(request, 'home.html', {'tasks': tasks, 'profile': profile})
 
 

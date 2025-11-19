@@ -117,14 +117,14 @@
       align-items: center;
     }
 
-    .delete-btn {
-      background-color: #e74c3c;
+    .complete-btn {
+      background-color: #187c0f;
       color: white;
       border: none;
     }
 
-    .delete-btn:hover {
-      background-color: #c0392b;
+    .complete-btn:hover {
+      background-color: #17c42e;
     }
 
     .sidebar input[type="password"] {
@@ -201,12 +201,15 @@
             {% endif %}
             <small>Due: {{ task.due_date|date:"M d, Y h:i A" }}</small>
           </div>
-
-          <form method="POST" style="margin:0;">
-            {% csrf_token %}
-            <input type="hidden" name="task_id" value="{{ task.id }}">
-            <button type="submit" name="delete_task" class="delete-btn">Delete</button>
-          </form>
+          <div style="display:flex; gap:6px; align-items:center;">
+            {% if not task.completed %}
+            <form method="POST" style="margin:0;">
+              {% csrf_token %}
+              <input type="hidden" name="task_id" value="{{ task.id }}">
+              <button type="submit" name="complete_task" class="complete-btn">Complete</button>
+            </form>
+            {% endif %}
+          </div>
         </li>
         {% empty %}
         <li>No tasks yet! Add one above 👆</li>
