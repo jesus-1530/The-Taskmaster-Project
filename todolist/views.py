@@ -4,6 +4,7 @@ from django.http import JsonResponse
 from django.utils import timezone
 from .models import Task, UserProfile
 from .canvas_api import fetch_canvas_assignments
+from django.contrib import messages
 
 @login_required(login_url='login')
 def home(request):
@@ -34,7 +35,14 @@ def sync_canvas(request):
     token = profile.canvas_token
 
 
-    fetch_canvas_assignments(token, user)
+    if not token:
+        messages.error(request, "Canvas token not set. Please enter and save your token first.")
+        return redirect('home')
+    try:
+        fetch_canvas_assignments(token, user)
+        messages.success(request, "Canvas assignments synced successfully.")
+    except Exception as e:
+        messages.error(request, f"Canvas sync failed: Invalid token")
     return redirect('home')
 
 def save_token(request):
@@ -48,6 +56,10 @@ def save_token(request):
         profile, _ = UserProfile.objects.get_or_create(user=user)
         profile.canvas_token = token
         profile.save()
+        if token:
+            messages.success(request, "Canvas token saved.")
+        else:
+            messages.warning(request, "Empty token submitted. Please provide a valid token.")
 
     return redirect('home')
 
