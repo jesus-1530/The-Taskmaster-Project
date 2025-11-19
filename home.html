@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaskMaster Dashboard</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #d9d6f3; /* Same lavender color */
+      display: flex;
+      height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 150px;
+      background-color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 20px;
+      box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Shared button style (same as shop) */
+    button {
+      width: 100px;
+      margin: 10px 0;
+      padding: 10px;
+      border: 1px solid gray;
+      background-color: #e6e6e6;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 4px;
+    }
+
+    button:hover {
+      background-color: #ccc;
+    }
+
+    /* Main layout */
+    .main {
+      flex: 1;
+      display: flex;
+      justify-content: space-between;
+      padding: 20px;
+    }
+
+    /* Calendar section */
+    .calendar-section {
+      background-color: #d9d9d9;
+      flex: 3;
+      margin: 0 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid gray;
+      border-radius: 8px;
+    }
+
+    #calendar {
+      width: 100%;
+      height: 100%;
+      background-color: white;
+      border-radius: 8px;
+      padding: 10px;
+    }
+
+    /* To-Do section */
+    .todo-section {
+      background-color: white;
+      flex: 0.5;
+      border: 1px solid gray;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      overflow-y: auto;
+      border-radius: 8px;
+    }
+
+    .todo-section h2 {
+      margin-bottom: 10px;
+    }
+
+    form {
+      width: 100%;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    input,
+    textarea {
+      width: 90%;
+      margin: 5px 0;
+      padding: 8px;
+      border: 1px solid gray;
+      border-radius: 4px;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      width: 90%;
+    }
+
+    li {
+      background: #f5f5f5;
+      margin: 8px 0;
+      padding: 10px;
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .complete-btn {
+      background-color: #187c0f;
+      color: white;
+      border: none;
+    }
+
+    .complete-btn:hover {
+      background-color: #17c42e;
+    }
+
+    .sidebar input[type="password"] {
+      width: 100px;
+      padding: 6px;
+      font-size: 12px;
+      text-align: center;
+      border: 1px solid gray;
+      border-radius: 4px;
+      margin-bottom: 5px;
+    }
+    /* Messages */
+    .messages { list-style: none; padding: 0 10px; margin: 10px 0 0; width: 100%; }
+    .messages .msg { font-size: 12px; margin: 4px 0; padding: 6px 8px; border-radius: 4px; line-height: 1.3; }
+    .messages .msg.error { background: #fdecea; color: #b00020; border: 1px solid #f5c2c7; }
+    .messages .msg.success { background: #e7f8ec; color: #065f46; border: 1px solid #34d399; }
+    .messages .msg.warning { background: #fff8e1; color: #8a6d00; border: 1px solid #ffecb5; }
+  </style>
+</head>
+
+<body>
+  <div class="sidebar">
+    <div style="margin-top:20px; font-weight:bold;">
+      💰 Points: {{ profile.points }}
+    </div>
+
+    {% if messages %}
+    <ul class="messages">
+      {% for message in messages %}
+      <li class="msg {{ message.tags }}">{{ message }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+
+    <a href="{% url 'shop' %}">
+      <button>Shop</button>
+    </a>
+
+    <form method="POST" action="{% url 'sync_canvas' %}">
+      {% csrf_token %}
+      <button type="submit">Sync Canvas</button>
+    </form>
+
+    <form method="POST" action="{% url 'save_token' %}">
+      {% csrf_token %}
+      <input type="password" name="token" placeholder="Canvas Token">
+      <button type="submit">Save Token</button>
+    </form>
+  </div>
+
+  <div class="main">
+    <div class="calendar-section">
+      <div id="calendar"></div>
+    </div>
+
+    <div class="todo-section">
+      <h2>To Do List</h2>
+
+      <form method="POST">
+        {% csrf_token %}
+        <input type="text" name="task" placeholder="Task title" required><br>
+        <input type="date" name="due_date"><br>
+        <textarea name="task_desc" placeholder="Description"></textarea><br>
+        <button type="submit" name="add_task">Add Task</button>
+      </form>
+
+      <ul>
+        {% for task in tasks %}
+        <li>
+          <div>
+            <strong>{{ task.task }}</strong><br>
+            {% if task.task_desc %}
+            <small>{{ task.task_desc }}</small><br>
+            {% endif %}
+            <small>Due: {{ task.due_date|date:"M d, Y h:i A" }}</small>
+          </div>
+          <div style="display:flex; gap:6px; align-items:center;">
+            {% if not task.completed %}
+            <form method="POST" style="margin:0;">
+              {% csrf_token %}
+              <input type="hidden" name="task_id" value="{{ task.id }}">
+              <button type="submit" name="complete_task" class="complete-btn">Complete</button>
+            </form>
+            {% endif %}
+          </div>
+        </li>
+        {% empty %}
+        <li>No tasks yet! Add one above 👆</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <!-- FullCalendar JS -->
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const calendarEl = document.getElementById('calendar');
+      const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        height: '100%',
+        timeZone: 'local',
+        allDaySlot: false,
+        eventDisplay: 'block',
+        eventTimeFormat: { hour: 'numeric', minute: '2-digit', meridiem: true },
+        events: '/tasks-json/'
+      });
+      calendar.render();
+      setInterval(() => {
+        calendar.refetchEvents();
+      }, 5000);
+    });
+  </script>
+</body>
+</html>
