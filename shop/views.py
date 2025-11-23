@@ -18,14 +18,17 @@ def shop(request):
         if not name or not cost:
             messages.error(request, "Please fill in all required fields.")
         else:
-            ShopItem.objects.create(
+            item = ShopItem.objects.create(
                 owner=request.user,
                 name=name,
                 description=description,
                 cost=cost,
                 image=image
             )
-            messages.success(request, "✅ Item added successfully!")
+            if image:
+                messages.success(request, f"✅ Item added with image: {item.image.url}")
+            else:
+                messages.success(request, "✅ Item added (no image uploaded)")
         return redirect("shop")
 
     elif request.method == "POST" and "item_id" in request.POST:

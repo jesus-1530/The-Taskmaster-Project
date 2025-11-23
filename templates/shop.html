@@ -123,6 +123,13 @@
     }
 
     .item-card button:hover { background-color: #005fa3; }
+    
+    /* Messages */
+    .messages { list-style: none; padding: 0; margin: 10px 0 20px; max-width: 800px; width: 100%; }
+    .messages .msg { font-size: 14px; margin: 8px 0; padding: 10px 15px; border-radius: 6px; line-height: 1.4; }
+    .messages .msg.error { background: #fdecea; color: #b00020; border: 1px solid #f5c2c7; }
+    .messages .msg.success { background: #e7f8ec; color: #065f46; border: 1px solid #34d399; }
+    .messages .msg.warning { background: #fff8e1; color: #8a6d00; border: 1px solid #ffecb5; }
   </style>
 </head>
 <body>
@@ -133,6 +140,14 @@
   <div class="main">
     <h1>Rewards Shop</h1>
     <div class="points">💰 Points: {{ profile.points }}</div>
+
+    {% if messages %}
+    <ul class="messages">
+      {% for message in messages %}
+      <li class="msg {{ message.tags }}">{{ message }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
 
     <!-- Upload Form -->
     <div class="upload-form">
