@@ -17,6 +17,10 @@ def shop(request):
 
         if not name or not cost:
             messages.error(request, "Please fill in all required fields.")
+        elif int(cost) < 0:
+            messages.error(request, "Item cost cannot be negative.")
+        elif int(cost) > 999999:
+            messages.error(request, "Item cost cannot exceed 999,999 points.")
         else:
             item = ShopItem.objects.create(
                 owner=request.user,
@@ -43,8 +47,10 @@ def shop(request):
             profile.points -= item.cost
             profile.save()
             Purchase.objects.create(user=request.user, item=item)
-
+            messages.success(request, f"🎉 Purchased {item.name} for {item.cost} points! 🎉")
             item.delete()
+        else:
+            messages.error(request, f"❌ Insufficient points. You need {item.cost} points but only have {profile.points}. ❌")
             
     items = ShopItem.objects.all()
     return render(request, "shop.html", {

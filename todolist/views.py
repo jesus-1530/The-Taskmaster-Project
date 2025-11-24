@@ -35,11 +35,6 @@ def home(request):
             due_dt = datetime.combine(date_obj, time(23, 59))
             due_dt = timezone.make_aware(due_dt, timezone.get_current_timezone())
 
-            # Optional duplicate title safeguard
-            if Task.objects.filter(user=request.user, task__iexact=title).exists():
-                messages.warning(request, "A task with that title already exists.")
-                return redirect('home')
-            
             random_points = randint(5, 20)
             Task.objects.create(
                 user=request.user,
